@@ -14,6 +14,17 @@ pipeline {
             }
         }
 
+        stage('Verify requirements.txt') {
+            steps {
+                // Verify that requirements.txt file exists
+                script {
+                    if (!fileExists('requirements.txt')) {
+                        error "requirements.txt not found in the repository."
+                    }
+                }
+            }
+        }
+
         stage('Setup Virtual Environment') {
             steps {
                 script {
@@ -46,17 +57,4 @@ pipeline {
                     // Deploy your Flask app
                     echo 'Deploying application...'
                     // Example deployment command, modify as needed
-                    // sh 'scp -r . user@your_server:/path/to/deploy'
-                }
-            }
-        }
-    }
-
-    post {
-        always {
-            // Clean up after the pipeline runs
-            echo 'Cleaning up...'
-            sh 'rm -rf ${VENV_PATH}'
-        }
-    }
-}
+        
