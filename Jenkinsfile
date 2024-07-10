@@ -30,8 +30,6 @@ pipeline {
                 script {
                     // Check for the virtual environment, create it if it doesn't exist
                     sh 'python3 -m venv $VENV_PATH'
-                    // Activate the virtual environment
-                    sh '. $VENV_PATH/bin/activate'
                 }
             }
         }
@@ -39,7 +37,7 @@ pipeline {
         stage('Install Dependencies') {
             steps {
                 // Install any dependencies listed in requirements.txt
-                sh '. $VENV_PATH/bin/activate && pip install -r requirements.txt'
+                sh 'bash -c "source $VENV_PATH/bin/activate && pip install -r requirements.txt"'
             }
         }
 
@@ -47,7 +45,7 @@ pipeline {
             steps {
                 // Run your tests here
                 echo "Running tests..."
-                sh '. $VENV_PATH/bin/activate && pytest'
+                sh 'bash -c "source $VENV_PATH/bin/activate && pytest"'
             }
         }
 
@@ -57,4 +55,17 @@ pipeline {
                     // Deploy your Flask app
                     echo 'Deploying application...'
                     // Example deployment command, modify as needed
-        
+                    // sh 'bash -c "scp -r . user@your_server:/path/to/deploy"'
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            // Clean up after the pipeline runs
+            echo 'Cleaning up...'
+            sh 'rm -rf ${VENV_PATH}'
+        }
+    }
+}
