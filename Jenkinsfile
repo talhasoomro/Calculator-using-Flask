@@ -1,55 +1,62 @@
 pipeline {
     agent any
-    
+
+    environment {
+        VENV_PATH = 'myprojectenv'
+        FLASK_APP = 'app.py' // Assuming your main Flask app is named app.py
+    }
+
     stages {
-        stage('Clone Repository') {
+        stage('Checkout') {
             steps {
-                git 'https://github.com/talhasoomro/Calculator-using-Flask'
+                // Checkout code from GitHub repository
+                git url: 'https://github.com/talhasoomro/Calculator-using-Flask', branch: 'master'
             }
         }
-        
+
+        stage('Setup Virtual Environment') {
+            steps {
+                script {
+                    // Check for the virtual environment, create it if it doesn't exist
+                    sh 'python3 -m venv $VENV_PATH'
+                    // Activate the virtual environment
+                    sh 'source $VENV_PATH/bin/activate'
+                }
+            }
+        }
+
         stage('Install Dependencies') {
             steps {
-                sh 'pip install -r requirements.txt'
+                // Install any dependencies listed in requirements.txt
+                sh 'source $VENV_PATH/bin/activate && pip install -r requirements.txt'
             }
         }
-        
-        stage('Run Tests') {
+
+        stage('Test') {
             steps {
-                // Add your test commands here
-                sh 'pytest'
+                // Run your tests here
+                echo "Running tests..."
+                sh 'source $VENV_PATH/bin/activate && pytest'
             }
         }
-        
-        stage('Build Docker Image') {
-            steps {
-                script {
-                    dockerImage = docker.build("calculator-using-flask:latest")
-                }
-            }
-        }
-        
-        stage('Push Docker Image') {
-            steps {
-                script {
-                    docker.withRegistry('https://your-docker-registry', 'docker-credentials-id') {
-                        dockerImage.push()
-                    }
-                }
-            }
-        }
-        
+
         stage('Deploy') {
             steps {
-                // Add your deployment commands here
-                sh 'docker-compose up -d'
+                script {
+                    // Deploy your Flask app
+                    echo 'Deploying application...'
+                    // Example deployment command, modify as needed
+                    // sh 'scp -r . user@your_server:/path/to/deploy'
+                }
             }
         }
     }
-    
+
     post {
         always {
-            cleanWs()
+            // Clean up after the pipeline runs
+            echo 'Cleaning up...'
+            sh 'rm -rf ${VENV_PATH}'
         }
     }
 }
